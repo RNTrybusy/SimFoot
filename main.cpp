@@ -2,6 +2,9 @@
 #include <string>
 #include <vector>
 #include <iomanip>
+#include <random>
+#include <chrono>
+#include <thread>
 
 using namespace std;
 
@@ -54,46 +57,98 @@ public:
         elenco.push_back(j);
     }
 
-    // Método para listar o plantel com jogadores
-    void mostrarElenco() const {
-        cout << "\n=======================================" << endl;
-        cout << "TIME: " << nome << " | ESTADIO: " << estadio << endl;
-        cout << "=======================================" << endl;
-        
-        if (elenco.empty()) {
-            cout << "Nenhum jogador cadastrado neste time." << endl;
-            return;
-        }
-        
-        for (size_t i = 0; i < elenco.size(); i++) {
-            cout << "[" << i + 1 << "] " 
-                << left << setw(20) << elenco[i].getNome()
-                << " | Idade: " << elenco[i].getIdade()
-                << " | Forca: " << elenco[i].getForca()
-                << " | Hab: " << elenco[i].getHabilidade()
-                << endl;
-        }
-        
+    // Calcular a força geral do time para usar na partida
+    int calcularForcaGeral() const {
+        if (elenco.empty()) return 0;
+        int soma = 0;
+        for (const auto& j : elenco) {
+            soma += j.getForca() + j.getHabilidade();
+        }   
+        return soma / (elenco.size() * 2);
     }
 };
+// ==========================================
+// MOTOR DE PARTIDA
+// ==========================================
+void simularPartida(Time& casa, Time& fora) {
+    cout << "\n==================================================" << endl;
+    cout << "   " << casa.getNome() << " x " << fora.getNome() << endl;
+    cout << "   Estadio: " << casa.getEstadio() << endl;
+    cout << "==================================================\n" << endl;
+
+    int golsCasa = 0;
+    int golsFora = 0;
+
+    int forcaCasa = casa.calcularForcaGeral();
+    int forcaFora = fora.calcularForcaGeral();
+
+    // Preparar as ações de sorteio aleatório baseados no relógio do sistema (nunca se repete!)
+    unsigned semente = chrono::system_clock::now().time_since_epoch().count();
+    mt19937 gerador(semente);
+    uniform_int_distribution<int> chance(1, 100);
+
+    // Bônus de jogar em casa (Apoio do torcedor)
+    forcaCasa += 5;
+
+    // Relógio de tempo de Jogo
+    for (int minuto = 1; minuto <= 90; minuto++) {
+
+        // Pausa de alguns milissegundos para cada evento ativado
+        this_thread::sleep_for(chrono::milliseconds(50));
+
+        int evento = chance(gerador);
+        
+        // Lógica de chances de gol
+        if (evento <= 4) { // 4% de chance para lances perigosos time da casa
+            int finalizacao = chance(gerador) + forcaCasa;
+            int defesa = chance(gerador) + forcaFora;
+            
+            if (finalizacao > defesa + 15) {
+                golsCasa++;
+                cout << "[" << minuto << "'] GOOOOOOOOOOL DO " << casa.getNome() << "!!!" << endl;
+            } else {
+                cout << "[" << minuto << "'] Uuuuuh! O ataque do " << casa.getNome() << " quase marca!" << endl;
+            }
+        }
+        else if (evento >= 97) { // 4% de chance para um lance do time visitante
+            int finalizacao = chance(gerador) + forcaFora;
+            int defesa = chance(gerador) + forcaCasa;
+
+            if (finalizacao > defesa + 15) {
+                golsFora++;
+                cout << "[" << minuto << "'] GOOOOOOOOOOL DO " << fora.getNome() << "!!!" << endl;
+            } else {
+                cout << "[" << minuto << "'] Defesaca da zaga do " << casa.getNome() << ", salvando o time!" << endl;
+            }
+        }
+    }
+
+    cout << "\n==================================================" << endl;
+    cout << "   FIM DE PAPO! PLACAR FINAL:" << endl;
+    cout << "   " << casa.getNome() << " " << golsCasa << " x " << golsFora << " " << fora.getNome() << endl;
+    cout << "==================================================\n" << endl;
+}
 
 // ==========================================
-// O MOTOR DO JOGO (Função Principal)
+// FUNÇÃO PRINCIPAL
 // ==========================================
 int main() {
-    cout << "Iniciando o Simulador de Futebol C++..." << endl;
+    // 1. Montando o time da casa
+    Time saoPaulo("Sao Paulo", "Morumbi");
+    saoPaulo.adicionarJogador(jogador("Jonathan Calleri", 29, 85, 80));
+    saoPaulo.adicionarJogador(jogador("Rodrigo Nestor", 22, 75, 78));
+    saoPaulo.adicionarJogador(jogador("Arboleda", 31, 82, 70));
+    saoPaulo.adicionarJogador(jogador("Jandrei", 29, 72, 65));
 
-    // Criando o nosso time
-    Time meuTime("Sao Paulo", "Morumbi");
+    // 2. Montando o time visitante
+    Time palmeiras("Palmeiras", "Allianz Parque");
+    palmeiras.adicionarJogador(jogador("Dudu", 31, 86, 84));
+    palmeiras.adicionarJogador(jogador("Raphael Veiga", 28, 84, 82));
+    palmeiras.adicionarJogador(jogador("Gustavo Gomez", 30, 85, 75));
+    palmeiras.adicionarJogador(jogador("Weverton", 35, 82, 70));
 
-    // Criando uns craques e colocando no time
-    meuTime.adicionarJogador(jogador("Jonathan Calleri", 29, 85, 80));
-    meuTime.adicionarJogador(jogador("Rodrigo Nestor", 22, 75, 78));
-    meuTime.adicionarJogador(jogador("Arboleda", 31, 82, 70));
-    meuTime.adicionarJogador(jogador("Jandrei", 29, 72, 65));
-
-    // Exibindo o resultado na tela
-    meuTime.mostrarElenco();
+    // 3. O Juiz apita!
+    simularPartida(saoPaulo, palmeiras);
 
     return 0;
 }
