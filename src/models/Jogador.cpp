@@ -1,12 +1,13 @@
 #include "../../include/Jogador.h"
 
-Jogador::Jogador(std::string n, int id, int f, int h, int stam, int agr) {
-  nome = n;
-  idade = id;
-  forca = f;
-  habilidade = h;
-  stamina = stam;
-  agressividade = agr;
+Jogador::Jogador(std::string nomeDoAtleta, int idadeDoAtleta, int forcaDoAtleta,
+                 int habDoAtleta, int stamDoAtleta, int agrDoAtleta) {
+  nomeJogador = nomeDoAtleta;
+  idadeJogador = idadeDoAtleta;
+  forca = forcaDoAtleta;
+  habilidade = habDoAtleta;
+  stamina = stamDoAtleta;
+  agressividade = agrDoAtleta;
   emCampo = true;
   cartoesAmarelos = 0;
 }
@@ -18,7 +19,5 @@ void Jogador::cansar(int desgaste) {
 }
 
 void Jogador::receberAmarelo() { cartoesAmarelos++; }
-
 void Jogador::expulsar() { emCampo = false; }
-
 void Jogador::lesionar() { emCampo = false; }

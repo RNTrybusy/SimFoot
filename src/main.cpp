@@ -1,12 +1,33 @@
 #include "../include/Partida.h"
 #include "../include/Time.h"
 #include <iostream>
+#include <string>
 
 
 using namespace std;
 
-int main() {
-  cout << "Iniciando R-Foot Manager..." << endl;
+// Função auxiliar para pausar a tela antes de limpar
+void pausarTela() {
+  cout << "\nPressione ENTER para continuar...";
+  cin.ignore();
+  cin.get();
+}
+
+// Limpa a tela de forma multiplataforma (Windows/Linux)
+void limparTela() {
+#ifdef _WIN32
+  system("cls");
+#else
+  system("clear");
+#endif
+}
+
+// O nosso antigo main() virou uma função específica de Jogo Rápido
+void iniciarJogoRapido() {
+  limparTela();
+  cout << "========================================" << endl;
+  cout << "          MODO: JOGO RAPIDO             " << endl;
+  cout << "========================================\n" << endl;
 
   Time saoPaulo("Sao Paulo", "Morumbi");
   saoPaulo.adicionarJogador(Jogador("Calleri", 29, 85, 80, 100, 70));
@@ -21,6 +42,98 @@ int main() {
   palmeiras.adicionarJogador(Jogador("Weverton", 35, 82, 70, 100, 10));
 
   simularPartida(saoPaulo, palmeiras);
+  pausarTela();
+}
+
+void menuNovoJogo() {
+  int opcao;
+  do {
+    limparTela();
+    cout << "========================================" << endl;
+    cout << "              NOVO JOGO                 " << endl;
+    cout << "========================================" << endl;
+    cout << " [1] Campanha (Em breve)" << endl;
+    cout << " [2] Amistoso (Em breve)" << endl;
+    cout << " [3] Jogo Rapido (Simular Partida)" << endl;
+    cout << " [0] Voltar" << endl;
+    cout << "========================================" << endl;
+    cout << "> Escolha uma opcao: ";
+    cin >> opcao;
+
+    switch (opcao) {
+    case 1:
+      cout << "Modo Campanha ainda nao implementado!" << endl;
+      pausarTela();
+      break;
+    case 2:
+      cout << "Modo Amistoso ainda nao implementado!" << endl;
+      pausarTela();
+      break;
+    case 3:
+      iniciarJogoRapido();
+      break;
+    case 0:
+      break;
+    default:
+      cout << "Opcao Invalida!" << endl;
+      pausarTela();
+      break;
+    }
+  } while (opcao != 0);
+}
+
+int main() {
+  int opcao;
+  bool rodando = true;
+
+  while (rodando) {
+    limparTela();
+    cout << "========================================" << endl;
+    cout << "       R-FOOT MANAGER (Basic Edition)   " << endl;
+    cout << "========================================" << endl;
+    cout << " [1] Novo Jogo" << endl;
+    cout << " [2] Carregar Jogo" << endl;
+    cout << " [3] Configuracoes" << endl;
+    cout << " [4] Editar Banco de Dados" << endl;
+    cout << " [0] Sair" << endl;
+    cout << "========================================" << endl;
+    cout << "> Escolha uma opcao: ";
+
+    cin >> opcao;
+
+    // Limpa o buffer de entrada para evitar bugs se o usuário digitar letras
+    if (cin.fail()) {
+      cin.clear();
+      cin.ignore(10000, '\n');
+      opcao = -1;
+    }
+
+    switch (opcao) {
+    case 1:
+      menuNovoJogo();
+      break;
+    case 2:
+      cout << "\n[Sistema de Load sera implementado em breve!]\n";
+      pausarTela();
+      break;
+    case 3:
+      cout << "\n[Configuracoes serao implementadas em breve!]\n";
+      pausarTela();
+      break;
+    case 4:
+      cout << "\n[Editor de Times .team sera implementado em breve!]\n";
+      pausarTela();
+      break;
+    case 0:
+      cout << "\nSaindo do R-Foot Manager. Ate a proxima, chefe!\n";
+      rodando = false;
+      break;
+    default:
+      cout << "\nOpcao invalida, sô! Tenta de novo.\n";
+      pausarTela();
+      break;
+    }
+  }
 
   return 0;
 }

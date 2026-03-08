@@ -5,8 +5,8 @@
 
 class Jogador {
 private:
-  std::string nome;
-  int idade;
+  std::string nomeJogador;
+  int idadeJogador;
   int forca;
   int habilidade;
   int stamina;
@@ -15,20 +15,19 @@ private:
   int cartoesAmarelos;
 
 public:
-  // Construtor
-  Jogador(std::string n, int id, int f, int h, int stam, int agr);
+  // Construtor com variáveis super claras
+  Jogador(std::string nomeDoAtleta, int idadeDoAtleta, int forcaDoAtleta,
+          int habDoAtleta, int stamDoAtleta, int agrDoAtleta);
 
-  // Getters Simples (podem ficar inline dentro de .h para otimização)
-  std::string getNome() const { return nome; }
-  int getIdade() const { return idade; }
+  std::string getNome() const { return nomeJogador; }
+  int getIdade() const { return idadeJogador; }
   int getForca() const { return forca; }
   int getHabilidade() const { return habilidade; }
   int getStamina() const { return stamina; }
   int getAgressividade() const { return agressividade; }
   bool isEmCampo() const { return emCampo; }
-  int getCartoesAmarelos() const { return cartoesAmarelos; }
+  int getAmarelos() const { return cartoesAmarelos; }
 
-  // Métodos que alteram o estado do jogador
   void cansar(int desgaste);
   void receberAmarelo();
   void expulsar();

@@ -44,7 +44,7 @@ void simularPartida(Time &casa, Time &fora) {
           cout << "[" << minuto << "'] Falta dura de " << defensor->getNome()
                << " parando o contra-ataque!" << endl;
           defensor->receberAmarelo();
-          if (defensor->getCartoesAmarelos() == 2 || chance(gerador) > 85) {
+          if (defensor->getAmarelos() == 2 || chance(gerador) > 85) {
             cout << "      -> VERMELHO DIRETO! " << defensor->getNome()
                  << " ta expulso!" << endl;
             defensor->expulsar();
