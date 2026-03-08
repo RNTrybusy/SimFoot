@@ -34,7 +34,7 @@ vector<string> obterArquivosEquipas() {
   if ((dir = opendir("data_files")) != NULL) {
     while ((ent = readdir(dir)) != NULL) {
       string nomeArquivo = ent->d_name;
-      // Se o ficheiro tiver ".team" no nome, adiciona à lista
+      // Se o Arquivo tiver ".team" no nome, adiciona à lista
       if (nomeArquivo.find(".team") != string::npos) {
         arquivos.push_back(nomeArquivo);
       }
@@ -97,7 +97,7 @@ void iniciarJogoRapido() {
   Time equipaFora = GestorDados::carregarTime(caminhoFora);
 
   if (equipaCasa.getNome() == "ERRO" || equipaFora.getNome() == "ERRO") {
-    cout << "\nOcorreu um erro ao carregar o ficheiro binario da equipa!"
+    cout << "\nOcorreu um erro ao carregar o arquivo binario da equipa!"
          << endl;
     pausarTela();
     return;
