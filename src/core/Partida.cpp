@@ -86,12 +86,48 @@ void simularPartida(Time &casa, Time &fora) {
     }
     // --- TIME DE FORA ATACA ---
     else if (evento >= 95) {
+      Jogador *atacante = fora.sortearJogadorAtivo(gerador);
+      Jogador *defensor = casa.sortearJogadorAtivo(gerador);
+      if (!atacante || !defensor)
+        continue;
+
       int finalizacao = chance(gerador) + forcaFora;
       int defesa = chance(gerador) + forcaCasa;
+
+      // Chance de falta do time da casa parando o visitante
+      if (atacante->getHabilidade() > defensor->getHabilidade() + 15 ||
+          defensor->getStamina() < 40) {
+        if (chance(gerador) < defensor->getAgressividade()) {
+          cout << "[" << minuto << "'] Falta dura de " << defensor->getNome()
+               << " parando o contra-ataque do " << fora.getNome() << "!"
+               << endl;
+          defensor->receberAmarelo();
+          if (defensor->getAmarelos() == 2 || chance(gerador) > 85) {
+            cout << "      -> VERMELHO DIRETO! " << defensor->getNome()
+                 << " ta expulso!" << endl;
+            defensor->expulsar();
+          } else {
+            cout << "      -> Juizao mostra o cartao amarelo." << endl;
+          }
+          continue;
+        }
+      }
+
       if (finalizacao > defesa + 15) {
         golsFora++;
-        cout << "[" << minuto << "'] GOOOOOOOOOOL DO " << fora.getNome()
-             << "!!!" << endl;
+        cout << "[" << minuto << "'] GOOOOOOOOOOL DO " << fora.getNome() << "! "
+             << atacante->getNome() << " manda pro fundo da rede!" << endl;
+      } else if (finalizacao > defesa + 5) {
+        cout << "[" << minuto << "'] Goleiro espalma! Escanteio pro "
+             << fora.getNome() << "!" << endl;
+        if (chance(gerador) + (forcaFora / 2) > 60) {
+          golsFora++;
+          cout << "      -> Na cobranca de escanteio, " << atacante->getNome()
+               << " sobe de cabeca e faz o GOOOL!" << endl;
+        }
+      } else {
+        cout << "[" << minuto << "'] " << atacante->getNome()
+             << " isola a bola, foi la na arquibancada!" << endl;
       }
     }
   }

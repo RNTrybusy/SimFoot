@@ -1,8 +1,10 @@
 #include "../include/GestorDados.h"
 #include "../include/Partida.h"
 #include "../include/Time.h"
+#include <dirent.h> // Biblioteca para ler as diretorias (pastas)
 #include <iostream>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -22,26 +24,87 @@ void limparTela() {
 #endif
 }
 
-// O nosso antigo main() virou uma função específica de Jogo Rápido
+// Função para procurar todos os arquivos .team na pasta
+vector<string> obterArquivosEquipas() {
+  vector<string> arquivos;
+  DIR *dir;
+  struct dirent *ent;
+
+  // Tenta abrir a pasta data_files
+  if ((dir = opendir("data_files")) != NULL) {
+    while ((ent = readdir(dir)) != NULL) {
+      string nomeArquivo = ent->d_name;
+      // Se o ficheiro tiver ".team" no nome, adiciona à lista
+      if (nomeArquivo.find(".team") != string::npos) {
+        arquivos.push_back(nomeArquivo);
+      }
+    }
+    closedir(dir);
+  }
+  return arquivos;
+}
+
 void iniciarJogoRapido() {
   limparTela();
   cout << "========================================" << endl;
   cout << "          MODO: JOGO RAPIDO             " << endl;
   cout << "========================================\n" << endl;
 
-  Time saoPaulo("Sao Paulo", "Morumbi");
-  saoPaulo.adicionarJogador(Jogador("Calleri", 29, 85, 80, 100, 70));
-  saoPaulo.adicionarJogador(Jogador("Nestor", 22, 75, 78, 90, 40));
-  saoPaulo.adicionarJogador(Jogador("Arboleda", 31, 82, 70, 85, 85));
-  saoPaulo.adicionarJogador(Jogador("Jandrei", 29, 72, 65, 100, 20));
+  vector<string> arquivos = obterArquivosEquipas();
 
-  Time palmeiras("Palmeiras", "Allianz Parque");
-  palmeiras.adicionarJogador(Jogador("Dudu", 31, 86, 84, 85, 50));
-  palmeiras.adicionarJogador(Jogador("Veiga", 28, 84, 82, 95, 40));
-  palmeiras.adicionarJogador(Jogador("Gomez", 30, 85, 75, 90, 88));
-  palmeiras.adicionarJogador(Jogador("Weverton", 35, 82, 70, 100, 10));
+  // Verifica se existem equipas suficientes para um jogo
+  if (arquivos.size() < 2) {
+    cout << "Erro: Precisas de pelo menos 2 equipas criadas!" << endl;
+    cout << "Vai ao 'Editor de Base de Dados' e cria os teus planteis." << endl;
+    pausarTela();
+    return;
+  }
 
-  simularPartida(saoPaulo, palmeiras);
+  cout << "Equipas disponiveis no teu Banco de Dados:" << endl;
+  for (size_t i = 0; i < arquivos.size(); i++) {
+    // Remove a extensao .team para mostrar mais limpo no ecrã
+    string nomeExibicao = arquivos[i];
+    nomeExibicao.erase(nomeExibicao.find(".team"), 5);
+    cout << " [" << i + 1 << "] " << nomeExibicao << endl;
+  }
+
+  int escolhaCasa = 0, escolhaFora = 0;
+  cout << "\n> Escolhe o numero da equipa da CASA: ";
+  cin >> escolhaCasa;
+  cout << "> Escolhe o numero da equipa de FORA: ";
+  cin >> escolhaFora;
+
+  if (cin.fail()) {
+    cin.clear();
+    cin.ignore(10000, '\n');
+    escolhaCasa = -1; // força invalidação abaixo
+  }
+
+  // Validação de segurança
+  if (escolhaCasa < 1 || escolhaCasa > arquivos.size() || escolhaFora < 1 ||
+      escolhaFora > arquivos.size()) {
+    cout << "\nEscolha invalida! Regressando ao menu..." << endl;
+    pausarTela();
+    return;
+  }
+
+  // Prepara os caminhos dos arquivos escolhidos
+  string caminhoCasa = "data_files/" + arquivos[escolhaCasa - 1];
+  string caminhoFora = "data_files/" + arquivos[escolhaFora - 1];
+
+  // O nosso Gestor de Dados faz a magia de carregar tudo para a memória
+  Time equipaCasa = GestorDados::carregarTime(caminhoCasa);
+  Time equipaFora = GestorDados::carregarTime(caminhoFora);
+
+  if (equipaCasa.getNome() == "ERRO" || equipaFora.getNome() == "ERRO") {
+    cout << "\nOcorreu um erro ao carregar o ficheiro binario da equipa!"
+         << endl;
+    pausarTela();
+    return;
+  }
+
+  // O Juiz apita!
+  simularPartida(equipaCasa, equipaFora);
   pausarTela();
 }
 
@@ -59,6 +122,12 @@ void menuNovoJogo() {
     cout << "========================================" << endl;
     cout << "> Escolha uma opcao: ";
     cin >> opcao;
+
+    if (cin.fail()) {
+      cin.clear();
+      cin.ignore(10000, '\n');
+      opcao = -1;
+    }
 
     switch (opcao) {
     case 1:
@@ -85,32 +154,79 @@ void menuNovoJogo() {
 void menuEditorBD() {
   limparTela();
   cout << "========================================" << endl;
-  cout << "       EDITOR DE BASE DE DADOS          " << endl;
+  cout << "       CRIAR NOVO TIME NO BANCO         " << endl;
   cout << "========================================" << endl;
 
-  // Passo 1: Criar e guardar uma equipa
-  cout << "\nA gerar e a guardar um ficheiro de teste (.team)..." << endl;
-  Time meuTime("Sao Paulo", "Morumbi");
-  meuTime.adicionarJogador(Jogador("Calleri", 29, 85, 80, 100, 70));
-  meuTime.adicionarJogador(Jogador("Nestor", 22, 75, 78, 90, 40));
+  string nomeTime, estadio;
+  cout << "> Nome do Time: ";
+  // O 'ws' limpa qualquer lixo ou pulo de linha que sobrou antes de ler
+  getline(cin >> ws, nomeTime);
+  cout << "> Nome do Estadio: ";
+  getline(cin >> ws, estadio);
 
-  // Guarda na pasta data_files (garanta que a pasta existe no seu sistema!)
-  string caminho = "data_files/saopaulo.team";
-  GestorDados::guardarTime(meuTime, caminho);
+  Time novoTime(nomeTime, estadio);
 
-  // Passo 2: Ler o ficheiro recém-criado
-  cout << "\nA carregar a equipa do ficheiro binário..." << endl;
-  Time timeCarregado = GestorDados::carregarTime(caminho);
+  char continuar = 's';
+  int contador = 1;
 
-  if (timeCarregado.getNome() != "ERRO") {
-    cout << "\nEquipa Carregada: " << timeCarregado.getNome() << " ("
-         << timeCarregado.getEstadio() << ")" << endl;
-    cout << "Plantel:" << endl;
-    for (const auto &j : timeCarregado.getElenco()) {
-      cout << " - " << j.getNome() << " (Idade: " << j.getIdade()
-           << " | Forca: " << j.getForca() << ")" << endl;
+  cout << "\n--- ESCALANDO O ELENCO ---" << endl;
+  while (tolower(continuar) == 's') {
+    cout << "\n[ Jogador " << contador << " ]" << endl;
+    string nomeJog;
+    int id, forca, hab, stam, agr;
+
+    cout << "  Nome: ";
+    // Mesmo truque aqui pra não engolir a primeira letra do craque!
+    getline(cin >> ws, nomeJog);
+    cout << "  Idade: ";
+    cin >> id;
+    cout << "  Forca (1-100): ";
+    cin >> forca;
+    cout << "  Habilidade (1-100): ";
+    cin >> hab;
+    cout << "  Stamina (1-100): ";
+    cin >> stam;
+    cout << "  Agressividade (1-100): ";
+    cin >> agr;
+
+    if (cin.fail()) {
+      cin.clear();
+      cin.ignore(10000, '\n');
+      cout << "\n[ERRO] Valores invalidos! Digite apenas numeros para idade e "
+              "atributos.\n";
+      cout << "Tente adicionar o Jogador " << contador << " novamente.\n";
+      continue;
     }
+
+    novoTime.adicionarJogador(Jogador(nomeJog, id, forca, hab, stam, agr));
+    contador++;
+
+    cout << "\n> Adicionar outro jogador? (s/n): ";
+    cin >> continuar;
+
+    if (cin.fail()) {
+      cin.clear();
+    }
+    cin.ignore(10000, '\n');
   }
+
+  // Formata o nome do arquivo (ex: "Sao Paulo" vira "sao_paulo")
+  string nomeArquivo = nomeTime;
+  for (char &c : nomeArquivo) {
+    if (c == ' ')
+      c = '_';
+    c = tolower(c);
+  }
+  string caminho = "data_files/" + nomeArquivo + ".team";
+
+  // Salva usando o nosso Gestor
+  GestorDados::guardarTime(novoTime, caminho);
+
+  cout << "\n========================================" << endl;
+  cout << "  SUCESSO! Time guardado no cofre." << endl;
+  cout << "  Arquivo gerado: " << caminho << endl;
+  cout << "========================================" << endl;
+
   pausarTela();
 }
 

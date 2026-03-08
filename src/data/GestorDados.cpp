@@ -1,14 +1,24 @@
 #include "../../include/GestorDados.h"
 #include <fstream>
 #include <iostream>
+#include <sys/stat.h>
+
+// Macro pra garantir compatibilidade entre Windows e Linux na hora de criar a
+// pasta
+#if defined(_WIN32)
+#include <direct.h>
+#define CRIAR_PASTA(caminho) _mkdir(caminho)
+#else
+#define CRIAR_PASTA(caminho) mkdir(caminho, 0777)
+#endif
 
 using namespace std;
 
-// Funções auxiliares privadas para lidar com strings em modo binário
+// Funções auxiliares privadas
 void escreverString(ofstream &out, const string &str) {
   size_t tamanho = str.size();
-  out.write((char *)&tamanho, sizeof(size_t)); // Guarda o tamanho da palavra
-  out.write(str.c_str(), tamanho);             // Guarda a palavra em si
+  out.write((char *)&tamanho, sizeof(size_t));
+  out.write(str.c_str(), tamanho);
 }
 
 string lerString(ifstream &in) {
@@ -19,25 +29,23 @@ string lerString(ifstream &in) {
   return str;
 }
 
-void GestorDados::guardarTime(const Time &equipa,
-                              const string &caminhoFicheiro) {
-  // Abre o ficheiro em modo binário (ios::binary)
-  ofstream out(caminhoFicheiro, ios::binary);
+void GestorDados::guardarTime(const Time &time, const string &caminhoArquivo) {
+  // Tenta criar a pasta antes de qualquer coisa. Se já existir, ele só ignora.
+  CRIAR_PASTA("data_files");
+
+  ofstream out(caminhoArquivo, ios::binary);
   if (!out) {
-    cerr << "Erro ao criar o ficheiro: " << caminhoFicheiro << endl;
+    cerr << "Erro ao criar o arquivo: " << caminhoArquivo << endl;
     return;
   }
 
-  // 1. Guarda dados da Equipa
-  escreverString(out, equipa.getNome());
-  escreverString(out, equipa.getEstadio());
+  escreverString(out, time.getNome());
+  escreverString(out, time.getEstadio());
 
-  // 2. Guarda o número de jogadores no vetor
-  size_t numJogadores = equipa.getElenco().size();
+  size_t numJogadores = time.getElenco().size();
   out.write((char *)&numJogadores, sizeof(size_t));
 
-  // 3. Guarda jogador a jogador
-  for (const auto &j : equipa.getElenco()) {
+  for (const auto &j : time.getElenco()) {
     escreverString(out, j.getNome());
 
     int idade = j.getIdade();
@@ -46,7 +54,6 @@ void GestorDados::guardarTime(const Time &equipa,
     int stam = j.getStamina();
     int agr = j.getAgressividade();
 
-    // Variáveis do tipo int (4 bytes) podem ser gravadas diretamente
     out.write((char *)&idade, sizeof(int));
     out.write((char *)&forca, sizeof(int));
     out.write((char *)&hab, sizeof(int));
@@ -55,28 +62,22 @@ void GestorDados::guardarTime(const Time &equipa,
   }
 
   out.close();
-  cout << "Equipa '" << equipa.getNome()
-       << "' guardada com sucesso em: " << caminhoFicheiro << endl;
 }
 
-Time GestorDados::carregarTime(const string &caminhoFicheiro) {
-  ifstream in(caminhoFicheiro, ios::binary);
+Time GestorDados::carregarTime(const string &caminhoArquivo) {
+  ifstream in(caminhoArquivo, ios::binary);
   if (!in) {
-    cerr << "Erro ao abrir o ficheiro: " << caminhoFicheiro << endl;
-    // Retorna uma equipa vazia em caso de erro
+    cerr << "Erro ao abrir o arquivo: " << caminhoArquivo << endl;
     return Time("ERRO", "ERRO");
   }
 
-  // 1. Lê os dados da Equipa
   string nomeTime = lerString(in);
   string estadio = lerString(in);
-  Time equipa(nomeTime, estadio);
+  Time time(nomeTime, estadio);
 
-  // 2. Lê a quantidade de jogadores
   size_t numJogadores;
   in.read((char *)&numJogadores, sizeof(size_t));
 
-  // 3. Reconstrói os jogadores e insere-os na equipa
   for (size_t i = 0; i < numJogadores; ++i) {
     string nome = lerString(in);
     int idade, forca, hab, stam, agr;
@@ -87,9 +88,9 @@ Time GestorDados::carregarTime(const string &caminhoFicheiro) {
     in.read((char *)&stam, sizeof(int));
     in.read((char *)&agr, sizeof(int));
 
-    equipa.adicionarJogador(Jogador(nome, idade, forca, hab, stam, agr));
+    time.adicionarJogador(Jogador(nome, idade, forca, hab, stam, agr));
   }
 
   in.close();
-  return equipa;
+  return time;
 }
