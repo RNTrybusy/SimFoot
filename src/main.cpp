@@ -1,8 +1,8 @@
+#include "../include/GestorDados.h"
 #include "../include/Partida.h"
 #include "../include/Time.h"
 #include <iostream>
 #include <string>
-
 
 using namespace std;
 
@@ -82,6 +82,38 @@ void menuNovoJogo() {
   } while (opcao != 0);
 }
 
+void menuEditorBD() {
+  limparTela();
+  cout << "========================================" << endl;
+  cout << "       EDITOR DE BASE DE DADOS          " << endl;
+  cout << "========================================" << endl;
+
+  // Passo 1: Criar e guardar uma equipa
+  cout << "\nA gerar e a guardar um ficheiro de teste (.team)..." << endl;
+  Time meuTime("Sao Paulo", "Morumbi");
+  meuTime.adicionarJogador(Jogador("Calleri", 29, 85, 80, 100, 70));
+  meuTime.adicionarJogador(Jogador("Nestor", 22, 75, 78, 90, 40));
+
+  // Guarda na pasta data_files (garanta que a pasta existe no seu sistema!)
+  string caminho = "data_files/saopaulo.team";
+  GestorDados::guardarTime(meuTime, caminho);
+
+  // Passo 2: Ler o ficheiro recém-criado
+  cout << "\nA carregar a equipa do ficheiro binário..." << endl;
+  Time timeCarregado = GestorDados::carregarTime(caminho);
+
+  if (timeCarregado.getNome() != "ERRO") {
+    cout << "\nEquipa Carregada: " << timeCarregado.getNome() << " ("
+         << timeCarregado.getEstadio() << ")" << endl;
+    cout << "Plantel:" << endl;
+    for (const auto &j : timeCarregado.getElenco()) {
+      cout << " - " << j.getNome() << " (Idade: " << j.getIdade()
+           << " | Forca: " << j.getForca() << ")" << endl;
+    }
+  }
+  pausarTela();
+}
+
 int main() {
   int opcao;
   bool rodando = true;
@@ -121,8 +153,7 @@ int main() {
       pausarTela();
       break;
     case 4:
-      cout << "\n[Editor de Times .team sera implementado em breve!]\n";
-      pausarTela();
+      menuEditorBD();
       break;
     case 0:
       cout << "\nSaindo do R-Foot Manager. Ate a proxima, chefe!\n";

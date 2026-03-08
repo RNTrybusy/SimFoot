@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-
 class Time {
 private:
   std::string nome;
@@ -19,6 +18,7 @@ public:
   std::string getNome() const { return nome; }
   std::string getEstadio() const { return estadio; }
   std::vector<Jogador> &getElenco() { return elenco; }
+  const std::vector<Jogador> &getElenco() const { return elenco; }
 
   void adicionarJogador(Jogador j);
   int calcularForcaGeral() const;
